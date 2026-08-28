@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🌌 SOLAR SYSTEM CLICKER · planet builder</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      background: #050510;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-family: 'Segoe UI', Roboto, system-ui, sans-serif;
+      overflow-x: hidden;
+      background-image: radial-gradient(circle at 20% 30%, #1a1a3a, #0a0a1a 70%);
+    }
+
+    .game-wrapper {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1rem;
+      padding: 1rem;
+      max-width: 1200px;
+      width: 100%;
+    }
+
+    .header {
+      text-align: center;
+      color: #e0d9ff;
+      text-shadow: 0 0 20px #6a5acd, 0 0 40px #4a3aad;
+    }
+
+    .header h1 {
+      font-size: 2.5rem;
+      letter-spacing: 3px;
+      margin-bottom: 0.3rem;
+    }
+
+    .header .subtitle {
+      color: #a89bd9;
+      font-size: 1rem;
+      letter-spacing: 1px;
+    }
+
+    .main-panel {
+      display: flex;
+      gap: 1.5rem;
+      flex-wrap: wrap;
+      justify-content: center;
+      align-items: flex-start;
+      width: 100%;
+    }
+
+    /* ----- SOLAR SYSTEM DISPLAY ----- */
+    .solar-system-container {
+      background: radial-gradient(circle at 50% 50%, #0d0d2b, #060612 80%);
+      border-radius: 2rem;
+      padding: 1.5rem;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.8), inset 0 0 40px rgba(60,40,120,0.3);
+      flex: 2;
+      min-width: 320px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    canvas {
+      display: block;
+      width: 100%;
+      max-width: 520px;
+      height: auto;
+      border-radius: 1.5rem;
+      box-shadow: 0 0 35px rgba(80,60,200,0.5);
+      cursor: pointer;
+    }
+
+    .energy-display {
+      color: #ffd966;
+      font-size: 1.8rem;
+      font-weight: bold;
+      text-shadow: 0 0 15px #ffaa00;
+      letter-spacing: 2px;
+    }
+
+    /* ----- UPGRADE PANEL ----- */
+    .upgrade-panel {
+      background: #0e0e24;
+      border-radius: 2rem;
+      padding: 1.5rem;
+      flex: 1;
+      min-width: 280px;
+      box-shadow: 0 15px 30px rgba(0,0,0,0.7), inset 0 0 20px rgba(40,30,80,0.4);
+      display: flex;
+      flex-direction: column;
+      gap: 0.8rem;
+      max-height: 600px;
+      overflow-y: auto;
+    }
+
+    .upgrade-panel h2 {
+      color: #c5b3ff;
+      text-align: center;
+      font-size: 1.4rem;
+      letter-spacing: 1px;
+      border-bottom: 2px solid #3a2f6a;
+      padding-bottom: 0.5rem;
+    }
+
+    .planet-upgrade {
+      background: #1a1a3a;
+      border: 2px solid #4a3f8a;
+      border-radius: 1.5rem;
+      padding: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+      transition: 0.15s;
+      cursor: pointer;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.5);
+    }
+
+    .planet-upgrade:hover {
+      border-color: #8a7ad0;
+      background: #1f1f45;
+      transform: translateY(-2px);
+    }
+
+    .planet-upgrade:active {
+      transform: translateY(2px);
+    }
+
+    .planet-upgrade.disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+      pointer-events: none;
+    }
+
+    .planet-icon {
+      font-size: 2.5rem;
+      flex-shrink: 0;
+    }
+
+    .planet-info {
+      flex: 1;
+    }
+
+    .planet-name {
+      font-weight: bold;
+      color: #f0e6ff;
+      font-size: 1.1rem;
+    }
+
+    .planet-desc {
+      color: #b0a0d0;
+      font-size: 0.8rem;
+      margin: 0.2rem 0;
+    }
+
+    .planet-cost {
+      color: #ffd966;
+      font-weight: bold;
+      font-size: 0.9rem;
+    }
+
+    .planet-owned {
+      color: #88ff88;
+      font-weight: bold;
+      font-size: 1rem;
+      margin-left: auto;
+    }
+
+    /* ----- PRESTIGE BUTTON ----- */
+    .prestige-section {
+      display: flex;
+      justify-content: center;
+      gap: 1rem;
+      flex-wrap: wrap;
+      margin-top: 0.5rem;
+    }
+
+    .prestige-btn {
+      background: #2a1f4a;
+      border: 3px solid #b89aff;
+      color: #e6d6ff;
+      font-weight: bold;
+      font-size: 1.2rem;
+      padding: 0.8rem 2rem;
+      border-radius: 40px;
+      cursor: pointer;
+      box-shadow: 0 8px 0 #1a1030, 0 10px 20px black;
+      transition: 0.06s;
+      letter-spacing: 1px;
+    }
+
+    .prestige-btn:active {
+      transform: translateY(6px);
+      box-shadow: 0 2px 0 #1a1030;
+    }
+
+    .prestige-btn:disabled {
+      opacity: 0.4;
+      transform: translateY(4px);
+      box-shadow: 0 4px 0 #1a1030;
+      cursor: not-allowed;
+    }
+
+    .prestige-info {
+      color: #c0b0e0;
+      font-size: 0.9rem;
+      text-align: center;
+    }
+
+    /* scrollbar styling */
+    .upgrade-panel::-webkit-scrollbar {
+      width: 8px;
+    }
+    .upgrade-panel::-webkit-scrollbar-track {
+      background: #0e0e20;
+      border-radius: 10px;
+    }
+    .upgrade-panel::-webkit-scrollbar-thumb {
+      background: #4a3f8a;
+      border-radius: 10px;
+    }
+  </style>
+</head>
+<body>
+<div class="game-wrapper">
+  <div class="header">
+    <h1>🌌 SOLAR SYSTEM CLICKER</h1>
+    <div class="subtitle">click planets · harvest energy · build your cosmic empire</div>
+  </div>
+
+  <div class="main-panel">
+    <!-- Solar system canvas -->
+    <div class="solar-system-container">
+      <canvas id="solarCanvas" width="520" height="420"></canvas>
+      <div class="energy-display">⚡ <span id="energyDisplay">0</span> energy</div>
+    </div>
+
+    <!-- Upgrade panel -->
+    <div class="upgrade-panel" id="upgradePanel">
+      <h2>🪐 PLANET MARKET</h2>
+      <!-- dynamically generated upgrades -->
+    </div>
+  </div>
+
+  <div class="prestige-section">
+    <button class="prestige-btn" id="prestigeButton">🌟 SUPERNOVA (prestige)</button>
+    <div class="prestige-info" id="prestigeInfo">prestige multiplier: 1.00x</div>
+  </div>
+</div>
+
+<script>
+  (function() {
+    // ========== PLANET DEFINITIONS ==========
+    const planetTypes = [
+      { id: 'mercury', name: 'Mercury', icon: '🪨', baseCost: 15, baseEnergy: 0.5, description: 'Small rocky world' },
+      { id: 'venus', name: 'Venus', icon: '🌕', baseCost: 100, baseEnergy: 2, description: 'Hot & volcanic' },
+      { id: 'earth', name: 'Earth', icon: '🌍', baseCost: 800, baseEnergy: 6, description: 'Blue & alive' },
+      { id: 'mars', name: 'Mars', icon: '🔴', baseCost: 5000, baseEnergy: 20, description: 'Red desert planet' },
+      { id: 'jupiter', name: 'Jupiter', icon: '🟠', baseCost: 30000, baseEnergy: 80, description: 'Gas giant' },
+      { id: 'saturn', name: 'Saturn', icon: '🪐', baseCost: 150000, baseEnergy: 300, description: 'Ringed beauty' },
+      { id: 'uranus', name: 'Uranus', icon: '🔵', baseCost: 800000, baseEnergy: 1000, description: 'Ice giant' },
+      { id: 'neptune', name: 'Neptune', icon: '🔷', baseCost: 4000000, baseEnergy: 4000, description: 'Deep blue world' },
+      { id: 'pluto', name: 'Pluto', icon: '⚪', baseCost: 20000000, baseEnergy: 15000, description: 'Dwarf planet' },
+      { id: 'exoplanet', name: 'Exoplanet', icon: '🌟', baseCost: 100000000, baseEnergy: 60000, description: 'Alien world' }
+    ];
+
+    // ========== GAME STATE ==========
+    let energy = 0;
+    let totalEnergyEarned = 0;     // for prestige calculation
+    let prestigeMultiplier = 1;
+    let planetCounts = {};         // { planetId: count }
+    let clickEnergy = 1;           // base click energy
+
+    // Initialize counts
+    planetTypes.forEach(p => { planetCounts[p.id] = 0; });
+
+    // ========== CANVAS SETUP ==========
+    const canvas = document.getElementById('solarCanvas');
+    const ctx = canvas.getContext('2d');
+    const W = canvas.width;
+    const H = canvas.height;
+
+    // Sun position (center of canvas)
+    const sunX = W / 2;
+    const sunY = H / 2;
+    const sunRadius = 35;
+
+    // Orbital radii for each planet type
+    const orbitalRadii = [70, 100, 130, 160, 195, 230, 265, 300, 335, 370];
+    const orbitSpeeds = [0.02, 0.016, 0.013, 0.01, 0.007, 0.006, 0.005, 0.004, 0.003, 0.0025];
+
+    // Planet angle state for animation
+    let planetAngles = {};
+    planetTypes.forEach((p, idx) => { planetAngles[p.id] = idx * 0.7; });
+
+    // ========== DOM ELEMENTS ==========
+    const energyDisplay = document.getElementById('energyDisplay');
+    const upgradePanel = document.getElementById('upgradePanel');
+    const prestigeButton = document.getElementById('prestigeButton');
+    const prestigeInfo = document.getElementById('prestigeInfo');
+
+    // ========== HELPER FUNCTIONS ==========
+    function getPlanetCost(planetId) {
+      const planet = planetTypes.find(p => p.id === planetId);
+      const owned = planetCounts[planetId] || 0;
+      return Math.floor(planet.baseCost * Math.pow(1.6, owned));
+    }
+
+    function getPlanetEnergyProduction(planetId) {
+      const planet = planetTypes.find(p => p.id === planetId);
+      const count = planetCounts[planetId] || 0;
+      if (count === 0) return 0;
+      return count * planet.baseEnergy * prestigeMultiplier;
+    }
+
+    function getTotalEnergyPerSecond() {
+      let total = 0;
+      planetTypes.forEach(p => {
+        total += getPlanetEnergyProduction(p.id);
+      });
+      return total;
+    }
+
+    function getClickPower() {
+      return clickEnergy * prestigeMultiplier;
+    }
+
+    // ========== UPDATE UI ==========
+    function updateUI() {
+      energyDisplay.textContent = Math.floor(energy);
+      prestigeInfo.textContent = `prestige multiplier: ${prestigeMultiplier.toFixed(2)}x`;
+
+      // Update upgrade panel
+      renderUpgradePanel();
+
+      // Prestige button state
+      const prestigeRequirement = 100000; // 100k energy for first prestige
+      prestigeButton.disabled = energy < prestigeRequirement;
+    }
+
+    function renderUpgradePanel() {
+      upgradePanel.innerHTML = '<h2>🪐 PLANET MARKET</h2>';
+
+      planetTypes.forEach(planet => {
+        const cost = getPlanetCost(planet.id);
+        const owned = planetCounts[planet.id] || 0;
+        const production = getPlanetEnergyProduction(planet.id);
+        const canAfford = energy >= cost;
+
+        const upgradeDiv = document.createElement('div');
+        upgradeDiv.className = `planet-upgrade ${canAfford ? '' : 'disabled'}`;
+        upgradeDiv.innerHTML = `
+          <div class="planet-icon">${planet.icon}</div>
+          <div class="planet-info">
+            <div class="planet-name">${planet.name}</div>
+            <div class="planet-desc">${planet.description}</div>
+            <div class="planet-cost">cost: ${cost} ⚡</div>
+            <div class="planet-desc">production: ${planet.baseEnergy * prestigeMultiplier} ⚡/sec each</div>
+          </div>
+          <div class="planet-owned">${owned > 0 ? '×' + owned : ''}</div>
+        `;
+
+        upgradeDiv.addEventListener('click', () => buyPlanet(planet.id));
+        upgradePanel.appendChild(upgradeDiv);
+      });
+    }
+
+    // ========== BUY PLANET ==========
+    function buyPlanet(planetId) {
+      const cost = getPlanetCost(planetId);
+      if (energy >= cost) {
+        energy -= cost;
+        planetCounts[planetId] = (planetCounts[planetId] || 0) + 1;
+        updateUI();
+      }
+    }
+
+    // ========== PRESTIGE ==========
+    function performPrestige() {
+      const requirement = 100000;
+      if (energy >= requirement) {
+        const prestigeGain = Math.floor(energy / 50000);
+        if (prestigeGain > 0) {
+          prestigeMultiplier += prestigeGain * 0.25; // +25% per prestige point
+        }
+        // Reset energy and planets
+        energy = 0;
+        planetTypes.forEach(p => { planetCounts[p.id] = 0; });
+        clickEnergy = 1;
+        updateUI();
+      }
+    }
+
+    // ========== CANVAS DRAWING ==========
+    function drawSolarSystem() {
+      ctx.clearRect(0, 0, W, H);
+
+      // Draw stars background
+      ctx.fillStyle = '#0a0a1a';
+      ctx.fillRect(0, 0, W, H);
+
+      // Draw distant stars
+      const seed = 12345;
+      for (let i = 0; i < 120; i++) {
+        const sx = (i * 137 + seed) % W;
+        const sy = (i * 277 + seed * 3) % H;
+        const brightness = 0.3 + ((i * 31) % 100) / 200;
+        ctx.fillStyle = `rgba(255, 255, 255, ${brightness})`;
+        ctx.fillRect(sx, sy, 1, 1);
+      }
+
+      // Draw orbital paths
+      ctx.strokeStyle = 'rgba(80, 80, 150, 0.3)';
+      ctx.lineWidth = 1;
+      orbitalRadii.forEach(radius => {
+        ctx.beginPath();
+        ctx.arc(sunX, sunY, radius, 0, Math.PI * 2);
+        ctx.stroke();
+      });
+
+      // Draw sun with glow
+      ctx.shadowColor = '#ffaa00';
+      ctx.shadowBlur = 40;
+      ctx.fillStyle = '#ffcc33';
+      ctx.beginPath();
+      ctx.arc(sunX, sunY, sunRadius, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.shadowBlur = 20;
+      ctx.fillStyle = '#ffee88';
+      ctx.beginPath();
+      ctx.arc(sunX, sunY, sunRadius * 0.6, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.shadowBlur = 0;
+      ctx.shadowColor = 'transparent';
+
+      // Draw planets that have been bought
+      planetTypes.forEach((planet, idx) => {
+        const count = planetCounts[planet.id] || 0;
+        if (count === 0) return;
+
+        planetAngles[planet.id] += orbitSpeeds[idx];
+        const angle = planetAngles[planet.id];
+        const radius = orbitalRadii[idx];
+        const px = sunX + Math.cos(angle) * radius;
+        const py = sunY + Math.sin(angle) * radius;
+        const planetRadius = 8 + idx * 1.5;
+
+        // Draw planet
+        ctx.shadowColor = '#8888ff';
+        ctx.shadowBlur = 15;
+        ctx.fillStyle = ['#aaaaaa', '#dddd88', '#4488ff', '#cc4444', '#dd9955', '#ddcc88', '#44cccc', '#4444cc', '#cccccc', '#ff88cc'][idx];
+        ctx.beginPath();
+        ctx.arc(px, py, planetRadius, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Draw count badge
+        ctx.shadowBlur = 0;
+        ctx.fillStyle = 'white';
+        ctx.font = 'bold 11px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(`×${count}`, px, py - planetRadius - 4);
+      });
+
+      // Draw energy per second indicator
+      ctx.shadowBlur = 0;
+      ctx.fillStyle = '#ccddff';
+      ctx.font = 'bold 16px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(`⚡ ${getTotalEnergyPerSecond().toFixed(1)}/sec`, sunX, sunY + sunRadius + 30);
+      ctx.textAlign = 'left';
+    }
+
+    // ========== CLICK HANDLER ==========
+    canvas.addEventListener('click', (e) => {
+      const rect = canvas.getBoundingClientRect();
+      const scaleX = W / rect.width;
+      const scaleY = H / rect.height;
+      const clickX = (e.clientX - rect.left) * scaleX;
+      const clickY = (e.clientY - rect.top) * scaleY;
+
+      // Check if clicked on sun
+      const distToSun = Math.sqrt((clickX - sunX) ** 2 + (clickY - sunY) ** 2);
+      if (distToSun < sunRadius + 10) {
+        energy += getClickPower();
+        updateUI();
+        // Visual feedback
+        canvas.style.transform = 'scale(0.98)';
+        setTimeout(() => { canvas.style.transform = 'scale(1)'; }, 100);
+      }
+    });
+
+    // ========== GAME LOOP ==========
+    function gameLoop() {
+      // Auto-production from planets
+      const production = getTotalEnergyPerSecond();
+      if (production > 0) {
+        energy += production / 10; // divide by 10 because loop runs at 10fps
+        totalEnergyEarned += production / 10;
+      }
+
+      // Update canvas
+      drawSolarSystem();
+
+      // Update UI occasionally
+      const now = Date.now();
+      if (!gameLoop.lastUIUpdate || now - gameLoop.lastUIUpdate > 200) {
+        updateUI();
+        gameLoop.lastUIUpdate = now;
+      }
+
+      requestAnimationFrame(gameLoop);
+    }
+    gameLoop.lastUIUpdate = 0;
+
+    // ========== EVENT LISTENERS ==========
+    prestigeButton.addEventListener('click', performPrestige);
+
+    // Keyboard shortcut: space to click sun
+    window.addEventListener('keydown', (e) => {
+      if (e.code === 'Space' && !e.repeat) {
+        e.preventDefault();
+        energy += getClickPower();
+        updateUI();
+      }
+    });
+
+    // ========== INIT ==========
+    function init() {
+      updateUI();
+      drawSolarSystem();
+      gameLoop();
+    }
+
+    init();
+  })();
+</script>
+</body>
+</html>
